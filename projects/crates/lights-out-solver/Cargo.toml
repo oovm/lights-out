@@ -1,12 +1,11 @@
 [package]
-name = "sub_projects"
+name = "lights-out-solver"
 publish = false
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
-description = "..."
-repository = "https://github.com/oovm/sub_projects"
-documentation = "https://docs.rs/sub_projects"
-readme = "Readme.md"
+description = "Lights Out puzzle solver (Gaussian elimination)"
+repository = "https://github.com/oovm/lights-out"
+readme = "../../../Readme.md"
 license = "MPL-2.0"
 edition = "2021"
 
