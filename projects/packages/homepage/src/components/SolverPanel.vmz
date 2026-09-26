@@ -1,0 +1,30 @@
+<template>
+  <section class="solver">
+    <label>
+      Board size
+      <input type="number" min="3" max="9" :value="size" @input="onSizeInput" />
+    </label>
+    <p>{{ status }}</p>
+    <Button type="button" @click="describe">Show matrix shape</Button>
+  </section>
+</template>
+
+<script client>
+export default class SolverPanel {
+  size = 3;
+  status = "Pick a board size to see the solver matrix dimensions.";
+
+  onSizeInput(event: Event) {
+    const target = event.target as HTMLInputElement | null;
+    if (!target) return;
+    const next = Number.parseInt(target.value, 10);
+    if (Number.isFinite(next) && next >= 3 && next <= 9) this.size = next;
+  }
+
+  describe() {
+    const n = this.size;
+    const toggles = n * n;
+    this.status = `A ${n}×${n} board yields a ${toggles}×${toggles} GF(2) system (${toggles} lamp toggles).`;
+  }
+}
+</script>

@@ -1,0 +1,17 @@
+<template>
+  <AppShell brand="Lights Out" home-href="/" nav-label="Solver">
+    <Card title="Lights Out Solver" description="Gaussian elimination over GF(2) for classic Lights Out boards.">
+      <Prose>
+        <p>
+          The Rust crate <code>lights-out-solver</code> models toggle matrices and solves board states.
+          This VMZ shell documents the library. Interactive WASM playback can land here later.
+        </p>
+      </Prose>
+      <SolverPanel />
+    </Card>
+  </AppShell>
+</template>
+
+<script client>
+export default class IndexPage {}
+</script>
