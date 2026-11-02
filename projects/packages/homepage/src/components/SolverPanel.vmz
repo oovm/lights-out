@@ -1,30 +1,159 @@
 <template>
   <section class="solver">
-    <label>
-      Board size
-      <input type="number" min="3" max="9" :value="size" @input="onSizeInput" />
-    </label>
-    <p>{{ status }}</p>
-    <Button type="button" @click="describe">Show matrix shape</Button>
+    <div class="toolbar">
+      <label>
+        Board size
+        <input type="number" min="3" max="7" :value="size" @input="onSizeInput" />
+      </label>
+      <Button type="button" @click="randomize">Randomize</Button>
+      <Button type="button" @click="solve">Solve</Button>
+      <Button type="button" variant="ghost" @click="reset">All on</Button>
+    </div>
+    <p class="status">{{ status }}</p>
+    <div class="board" :style="boardStyle">
+      <button
+        v-for="cell in flatCells"
+        :key="cell.key"
+        type="button"
+        class="cell"
+        :class="{ on: cell.value === 1, press: cell.press }"
+        @click="onCellClick(cell.row, cell.col)"
+      />
+    </div>
+    <p v-if="solution.length" class="meta">Press pattern length: {{ pressCount }} toggles</p>
   </section>
 </template>
 
+<style>
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+.board {
+  display: grid;
+  gap: 0.35rem;
+  width: fit-content;
+  margin: 1rem 0;
+}
+.cell {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  cursor: pointer;
+}
+.cell.on {
+  background: #fbbf24;
+  box-shadow: inset 0 0 0 2px #f59e0b;
+}
+.cell.press {
+  outline: 2px solid #2563eb;
+}
+.status,
+.meta {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+</style>
+
 <script client>
+import {
+  createBoard,
+  solveLightsOut,
+  toggleCell,
+  type Board,
+} from "../lib/lights-out.ts";
+
+interface FlatCell {
+  key: string;
+  row: number;
+  col: number;
+  value: number;
+  press: boolean;
+}
+
 export default class SolverPanel {
   size = 3;
-  status = "Pick a board size to see the solver matrix dimensions.";
+  board: Board = createBoard(3, true);
+  solution: number[] = [];
+  status = "Click a cell to toggle it and its neighbors (GF(2) Lights Out).";
+
+  get flatCells(): FlatCell[] {
+    const cells: FlatCell[] = [];
+    for (let r = 0; r < this.size; r++) {
+      for (let c = 0; c < this.size; c++) {
+        const idx = r * this.size + c;
+        cells.push({
+          key: `${r}-${c}`,
+          row: r,
+          col: c,
+          value: this.board[r][c],
+          press: this.solution[idx] === 1,
+        });
+      }
+    }
+    return cells;
+  }
+
+  get pressCount() {
+    return this.solution.filter((v) => v === 1).length;
+  }
+
+  get boardStyle() {
+    return {
+      gridTemplateColumns: `repeat(${this.size}, 2.5rem)`,
+    };
+  }
 
   onSizeInput(event: Event) {
     const target = event.target as HTMLInputElement | null;
     if (!target) return;
     const next = Number.parseInt(target.value, 10);
-    if (Number.isFinite(next) && next >= 3 && next <= 9) this.size = next;
+    if (!Number.isFinite(next) || next < 3 || next > 7) return;
+    this.size = next;
+    this.board = createBoard(next, true);
+    this.solution = [];
+    this.status = `Board resized to ${next}×${next}.`;
   }
 
-  describe() {
-    const n = this.size;
-    const toggles = n * n;
-    this.status = `A ${n}×${n} board yields a ${toggles}×${toggles} GF(2) system (${toggles} lamp toggles).`;
+  onCellClick(row: number, col: number) {
+    this.board = toggleCell(this.board, row, col);
+    this.solution = [];
+    this.status = `Toggled (${row + 1}, ${col + 1}).`;
+  }
+
+  randomize() {
+    let board = createBoard(this.size, false);
+    const presses = Math.floor(Math.random() * this.size * this.size) + 1;
+    for (let i = 0; i < presses; i++) {
+      const r = Math.floor(Math.random() * this.size);
+      const c = Math.floor(Math.random() * this.size);
+      board = toggleCell(board, r, c);
+    }
+    this.board = board;
+    this.solution = [];
+    this.status = "Random puzzle generated.";
+  }
+
+  solve() {
+    const result = solveLightsOut(this.board);
+    if (!result) {
+      this.solution = [];
+      this.status = "No solution found for this board state.";
+      return;
+    }
+    this.solution = result;
+    this.status = `Solution found with ${this.pressCount} button press(es). Highlighted cells show the press pattern.`;
+  }
+
+  reset() {
+    this.board = createBoard(this.size, true);
+    this.solution = [];
+    this.status = "All lights on.";
   }
 }
 </script>

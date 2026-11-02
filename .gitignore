@@ -15,4 +15,5 @@ node_modules/
 # Rust / VMZ
 dist/
 target/
+.cache/
 Cargo.lock
